@@ -75,6 +75,9 @@ def FATArea():
 	if DEBUG:	
 		print "\n[+] FAT Area\n"
 		print "\t[+] Offset: ", handle.tell()	
+
+	global entryNum
+	entryNum = FatSize*bytesPsec/4
 	
 	data_area_start = offset + FatNum*FatSize*bytesPsec # Cluster 2 offset
 
@@ -96,7 +99,9 @@ def FATArea():
 		print "\nCtrl + C pressed!"
 
 	print "\n################# RESULT ##################\n"
-	print result
+	print "Processed : ", i ,"/", entryNum, "\n"
+	for e in result:
+		print e
 				
 def check_sign(offset, num):
 	handle.seek(0)
