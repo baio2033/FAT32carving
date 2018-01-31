@@ -92,7 +92,7 @@ def FATArea():
 					break
 				entry = unpack_from('<I',FAT_table,entry_offset)[0]
 				entry = entry & 0x0fffffff
-				print i, "th Cluster\t\t", hex(entry)
+				#print i, "th Cluster\t\t", hex(entry)
 				if entry == 0x0:
 					#print i, "th Cluster\t\t", hex(entry)
 					offset = data_area_start + (i-2)*bytesPsec*secPclu
