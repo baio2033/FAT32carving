@@ -84,6 +84,7 @@ def FATArea():
 	print "\n[+] Carving...(Ctrl + C to stop)\n"
 
 	FAT_table = handle.read(FatSize*bytesPsec)
+	#print entryNum
 	try:
 		for i in range(entryNum):
 			if i > 1:
@@ -95,7 +96,9 @@ def FATArea():
 				if entry == 0x0:
 					#print i, "th Cluster\t\t", hex(entry)
 					offset = data_area_start + (i-2)*bytesPsec*secPclu
-					check_sign(offset, i)
+					ret = check_sign(offset, i)
+					if ret == -1:
+						break
 	except KeyboardInterrupt:
 		print "\nCtrl + C pressed!"
 
@@ -107,11 +110,16 @@ def FATArea():
 def check_sign(offset, num):
 	handle.seek(offset)
 	#handle.read(offset)
+	#print offset
 	cluster = handle.read(bytesPsec*secPclu)
 
-	test = unpack_from('>I',cluster,0)[0]
+	try:
+		test = unpack_from('>I',cluster,0)[0]
+	except:
+		return -1
+
 	if test == 0:
-		return
+		return 1
 
 	jpg_sign = unpack_from('>H',cluster,0)[0]
 	zip_sign = unpack_from('>I',cluster,0)[0]
@@ -154,8 +162,7 @@ def check_sign(offset, num):
 		print num,"- RAR"
 
 def zip_parse(offset):
-	handle.seek(0)
-	handle.read(offset)
+	handle.seek(offset)
 
 	cluster = handle.read(0x1d)
 
