@@ -26,7 +26,7 @@ def VBRInfo(vbr):
 		print "\n[-] Error! None FAT32 FileSystem\n"
 		sys.exit()
 
-	print "\n[+] FAT32 FileSystem\n"
+	print "\n[+] FAT32 FileSystem Detected!\n"
 
 	if DEBUG:
 		print "\n[+] VBR Info\n"
@@ -118,31 +118,61 @@ def check_sign(offset, num):
 	png_sign = unpack_from('>Q',cluster,0)[0]
 	gif_sign = unpack_from('>I',cluster,0)[0]
 	lnk_sign = unpack_from('>I',cluster,0)[0]
+	rar_sign = unpack_from('>Q',cluster,0)[0] & 0xffffffffffffff
 
 	if jpg_sign == 0xffd8:
-		print num,"-jpeg"
+		print num,"- jpeg"
 		result.append(str(num)+"- jpeg")
-	if zip_sign == 0x504b0304:
-		ms_sign = unpack_from('>I',cluster,4)[0]
-		if ms_sign == 0x14000600:
-			result.append(str(num)+"- zip(docx,pptx,xlsx)")
-			print num,"- zip(docx,pptx,xlsx)"
+	elif zip_sign == 0x504b0304:
+		zip_sign2 = unpack_from('>I',cluster,4)[0]
+		if zip_sign2 == 0x14000600:
+			ext = check_ms(offset)
+			result.append(str(num)+"- zip ["+ext+"]")
+			print num,"- zip ["+ext+"]"
+		elif zip_sign2 == 0x14000800:
+			result.append(str(num)+"- zip [JAR]")
+			print num,"- zip [JAR]"
 		else:
-			result.append(str(num)+"- zip")
-			print num,"-zip file"
-	if pdf_sign == 0x25504446:
+			in_file = zip_parse(offset)
+			result.append(str(num)+"- zip {"+in_file+"}")
+			print num,"- zip {"+in_file+"}"			
+	elif pdf_sign == 0x25504446:
 		result.append(str(num)+"- pdf")
 		print num,"- pdf"
-	if png_sign == 0x89504e470d0a1a0a:
+	elif png_sign == 0x89504e470d0a1a0a:
 		result.append(str(num)+"- png")
 		print num,"- png"
-	if gif_sign == 0x47494638:
+	elif gif_sign == 0x47494638:
 		result.append(str(num)+"- gif")
 		print num,"- gif"
-	if lnk_sign == 0x4c000000:
+	elif lnk_sign == 0x4c000000:
 		result.append(str(num)+"- lnk")
 		print num,"- lnk"
+	elif rar_sign == 0x526172211a0700:
+		result.append(str(num)+"- RAR")
+		print num,"- RAR"
 
+def zip_parse(offset):
+	handle.seek(0)
+	handle.read(offset)
+
+	cluster = handle.read(0x1d)
+
+	name_len = unpack_from('<H',cluster,0x1a)[0]
+	name = handle.read(name_len+1) + " "
+	return name
+
+def check_ms(offset):
+	handle.seek(0)
+	handle.read(offset)
+
+	cluster = handle.read(0x1000)
+	if "ppt/slides/_rels" in cluster:
+		return "pptx"
+	elif "xl/_rels" in cluster:
+		return "xlsx"
+	elif "word/_rels" in cluster:
+		return "docx"
 
 if __name__ == "__main__":
 
