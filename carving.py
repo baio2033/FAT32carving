@@ -83,19 +83,20 @@ def FATArea():
 
 	print "\n[+] Carving...(Ctrl + C to stop)\n"
 
-	FAT_table = handle.read(FatSize)
+	FAT_table = handle.read(FatSize*bytesPsec)
 	try:
 		for i in range(entryNum):
 			if i > 1:
 				entry_offset = i*4
+				if entry_offset + 4 > entryNum:
+					break
 				entry = unpack_from('<I',FAT_table,entry_offset)[0]
 				entry = entry & 0x0fffffff
-				#print i, "th Cluster\t\t", hex(entry)
+				print i, "th Cluster\t\t", hex(entry)
 				if entry == 0x0:
 					#print i, "th Cluster\t\t", hex(entry)
 					offset = data_area_start + (i-2)*bytesPsec*secPclu
 					check_sign(offset, i)
-					
 	except KeyboardInterrupt:
 		print "\nCtrl + C pressed!"
 
@@ -105,8 +106,8 @@ def FATArea():
 		print e
 				
 def check_sign(offset, num):
-	handle.seek(0)
-	handle.read(offset)
+	handle.seek(offset)
+	#handle.read(offset)
 	cluster = handle.read(bytesPsec*secPclu)
 
 	test = unpack_from('>I',cluster,0)[0]
