@@ -88,8 +88,7 @@ def FATArea():
 		for i in range(entryNum):
 			if i > 1:
 				entry_offset = i*4
-				if entry_offset + 4 > entryNum:
-					break
+				
 				entry = unpack_from('<I',FAT_table,entry_offset)[0]
 				entry = entry & 0x0fffffff
 				#print i, "th Cluster\t\t", hex(entry)
